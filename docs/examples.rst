@@ -132,6 +132,31 @@ displayed
 
 .. image:: _static/simplicity_res.png
 
+Model Visualization
+-------------------
+
+Objective
+~~~~~~~~~
+
+Use ``otoole`` to visualize the reference energy system.
+
+1. ``otoole`` Visualise
+~~~~~~~~~~~~~~~~~~~~~~~
+The visualization functionality of ``otoole`` will work with any supported
+input data format (``csv``, ``datafile``, or ``excel``). In this case, we will
+use the excel file, ``simplicity.xlsx``, to generate the RES.
+
+Run the following command, where the RES will be saved as the file ``res.png``::
+
+    $ otoole viz res excel simplicity.xlsx res.png config.yaml
+
+2. View the RES
+~~~~~~~~~~~~~~~
+Open the newly created file, ``res.png`` and the following image should be
+displayed
+
+.. image:: _static/simplicity_res.png
+
 Template Setup
 --------------
 
