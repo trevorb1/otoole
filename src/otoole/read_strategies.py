@@ -302,7 +302,8 @@ class ReadDatafile(ReadStrategy):
 
         Arguments
         ---------
-        path_to_datafile: str
+        path_to_datafile: Union[str, TextIO]
+            A path name or file buffer pointing to the data file
         config: Dict
         """
         parameter_definitions = self._load_parameter_definitions(config)
