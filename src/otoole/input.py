@@ -36,7 +36,7 @@ from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 
 import pandas as pd
 
-from otoole.exceptions import OtooleIndexError, OtooleConfigFileError
+from otoole.exceptions import OtooleConfigFileError, OtooleIndexError
 
 logger = logging.getLogger(__name__)
 
@@ -556,7 +556,8 @@ class ReadStrategy(Strategy):
         return input_data
 
     def _compare_read_to_expected(
-        self, names: List[str], short_names: bool = False) -> None:
+        self, names: List[str], short_names: bool = False
+    ) -> None:
         """Compares input data definitions to config file definitions
 
         Arguments:
@@ -567,7 +568,7 @@ class ReadStrategy(Strategy):
             If should be checking short_names from config file
         """
         user_config = self.input_config
-        
+
         if short_names:
             expected = []
             for name in user_config:
@@ -579,13 +580,17 @@ class ReadStrategy(Strategy):
             expected = [x for x in user_config]
 
         errors = list(set(expected).symmetric_difference(set(names)))
-        
+
         if errors:
             for error in errors:
-                logger.warning(f"The parameter '{error}' is not found in both the input data and configuration file")
-            # only raise error if extra name is in the config file 
+                logger.warning(
+                    f"The parameter '{error}' is not found in both the input data and configuration file"
+                )
+            # only raise error if extra name is in the config file
             if any(error in user_config for error in errors):
-                raise OtooleConfigFileError("Ensure all parameters and sets defined in the configuration file exist in input data")
+                raise OtooleConfigFileError(
+                    "Ensure all parameters and sets defined in the configuration file exist in input data"
+                )
 
     @abstractmethod
     def read(

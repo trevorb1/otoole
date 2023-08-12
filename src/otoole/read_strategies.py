@@ -1,17 +1,16 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional, TextIO, Tuple, Union, TextIO
 from io import StringIO
+from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 
 import pandas as pd
-from amply import Amply
+from amply import Amply, AmplyError
 from flatten_dict import flatten
 
-from otoole.exceptions import OtooleDeprecationError, OtooleError, OtooleConfigFileError
+from otoole.exceptions import OtooleConfigFileError, OtooleDeprecationError, OtooleError
 from otoole.input import ReadStrategy
 from otoole.preprocess.longify_data import check_datatypes, check_set_datatype
 from otoole.utils import create_name_mappings
-from amply import AmplyError
 
 logger = logging.getLogger(__name__)
 
@@ -280,13 +279,15 @@ class ReadDatafile(ReadStrategy):
 
         config = self.user_config
         default_values = self._read_default_values(config)
-        
+
         try:
             amply_datafile = self.read_in_datafile(filepath, config)
             inputs = self._convert_amply_to_dataframe(amply_datafile, config)
         except AmplyError as ex:
             print(ex)
-            raise OtooleConfigFileError("Ensure all parameters and set names match between the configuration file and input data")
+            raise OtooleConfigFileError(
+                "Ensure all parameters and set names match between the configuration file and input data"
+            )
 
         self._compare_read_to_expected(names=list(inputs.keys()))
         for config_type in ["param", "set"]:
@@ -294,7 +295,9 @@ class ReadDatafile(ReadStrategy):
         inputs = self._check_index(inputs)
         return inputs, default_values
 
-    def read_in_datafile(self, path_to_datafile: Union[str, TextIO], config: Dict) -> Amply:
+    def read_in_datafile(
+        self, path_to_datafile: Union[str, TextIO], config: Dict
+    ) -> Amply:
         """Read in a datafile using the Amply parsing class
 
         Arguments

@@ -4,7 +4,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from pytest import fixture, mark, raises
 
-from otoole.exceptions import OtooleIndexError, OtooleConfigFileError
+from otoole.exceptions import OtooleConfigFileError, OtooleIndexError
 from otoole.input import ReadStrategy, WriteStrategy
 
 
