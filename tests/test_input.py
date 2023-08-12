@@ -4,7 +4,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from pytest import fixture, mark, raises
 
-from otoole.exceptions import OtooleIndexError, OtooleNameMismatchError
+from otoole.exceptions import OtooleIndexError, OtooleConfigFileError
 from otoole.input import ReadStrategy, WriteStrategy
 
 
@@ -326,10 +326,10 @@ class TestReadStrategy:
     compare_read_to_expected_data = [
         [["CapitalCost", "REGION", "TECHNOLOGY", "YEAR"], False],
         [["CAPEX", "REGION", "TECHNOLOGY", "YEAR"], True],
+        [["CapitalCost", "REGION", "TECHNOLOGY", "YEAR", "Extra"], False],
     ]
     compare_read_to_expected_data_exception = [
         ["CapitalCost", "REGION", "TECHNOLOGY"],
-        ["CapitalCost", "REGION", "TECHNOLOGY", "YEAR", "Extra"],
     ]
 
     capex_correct = pd.DataFrame(
@@ -518,7 +518,7 @@ class TestReadStrategy:
     @mark.parametrize(
         "expected, short_name",
         compare_read_to_expected_data,
-        ids=["full_name", "short_name"],
+        ids=["full_name", "short_name", "extra_value"],
     )
     def test_compare_read_to_expected(self, simple_user_config, expected, short_name):
         reader = DummyReadStrategy(simple_user_config)
@@ -527,9 +527,9 @@ class TestReadStrategy:
     @mark.parametrize(
         "expected",
         compare_read_to_expected_data_exception,
-        ids=["missing_value", "extra_value"],
+        ids=["missing_value"],
     )
     def test_compare_read_to_expected_exception(self, simple_user_config, expected):
         reader = DummyReadStrategy(simple_user_config)
-        with raises(OtooleNameMismatchError):
+        with raises(OtooleConfigFileError):
             reader._compare_read_to_expected(names=expected)

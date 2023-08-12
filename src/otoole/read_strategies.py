@@ -1,15 +1,17 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
+from typing import Any, Dict, List, Optional, TextIO, Tuple, Union, TextIO
+from io import StringIO
 
 import pandas as pd
 from amply import Amply
 from flatten_dict import flatten
 
-from otoole.exceptions import OtooleDeprecationError, OtooleError
+from otoole.exceptions import OtooleDeprecationError, OtooleError, OtooleConfigFileError
 from otoole.input import ReadStrategy
 from otoole.preprocess.longify_data import check_datatypes, check_set_datatype
 from otoole.utils import create_name_mappings
+from amply import AmplyError
 
 logger = logging.getLogger(__name__)
 
@@ -278,14 +280,21 @@ class ReadDatafile(ReadStrategy):
 
         config = self.user_config
         default_values = self._read_default_values(config)
-        amply_datafile = self.read_in_datafile(filepath, config)
-        inputs = self._convert_amply_to_dataframe(amply_datafile, config)
+        
+        try:
+            amply_datafile = self.read_in_datafile(filepath, config)
+            inputs = self._convert_amply_to_dataframe(amply_datafile, config)
+        except AmplyError as ex:
+            print(ex)
+            raise OtooleConfigFileError("Ensure all parameters and set names match between the configuration file and input data")
+
+        self._compare_read_to_expected(names=list(inputs.keys()))
         for config_type in ["param", "set"]:
             inputs = self._get_missing_input_dataframes(inputs, config_type=config_type)
         inputs = self._check_index(inputs)
         return inputs, default_values
 
-    def read_in_datafile(self, path_to_datafile: str, config: Dict) -> Amply:
+    def read_in_datafile(self, path_to_datafile: Union[str, TextIO], config: Dict) -> Amply:
         """Read in a datafile using the Amply parsing class
 
         Arguments
@@ -296,8 +305,13 @@ class ReadDatafile(ReadStrategy):
         parameter_definitions = self._load_parameter_definitions(config)
         datafile_parser = Amply(parameter_definitions)
 
-        with open(path_to_datafile, "r") as datafile:
-            datafile_parser.load_file(datafile)
+        if isinstance(path_to_datafile, str):
+            with open(path_to_datafile, "r") as datafile:
+                datafile_parser.load_file(datafile)
+        elif isinstance(path_to_datafile, StringIO):
+            datafile_parser.load_file(path_to_datafile)
+        else:
+            raise TypeError("Argument filepath type must be a string or an open file")
 
         return datafile_parser
 

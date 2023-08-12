@@ -8,7 +8,7 @@ from amply import Amply
 from pytest import mark, raises
 
 from otoole import ReadCsv, ReadDatafile, ReadExcel, ReadMemory
-from otoole.exceptions import OtooleDeprecationError, OtooleError
+from otoole.exceptions import OtooleDeprecationError, OtooleError, OtooleConfigFileError
 from otoole.preprocess.longify_data import check_datatypes
 from otoole.results.results import (
     ReadCbc,
@@ -891,7 +891,19 @@ class TestReadDatafile:
             "Parameter ResultsPath could not be found in the configuration."
             in caplog.text
         )
-
+        
+    def test_catch_error_missing_data(self, user_config):
+        """Catches error where input data does not match config"""
+        reader = ReadDatafile(user_config=user_config)
+        
+        input_file = """
+            param NotRealParameter default 1 :=
+            ;
+            """
+        
+        with raises(OtooleConfigFileError):
+            with StringIO(input_file) as file_buffer:
+                reader.read(file_buffer)
 
 class TestReadExcel:
     def test_read_excel_yearsplit(self, user_config):
