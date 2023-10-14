@@ -40,6 +40,13 @@ class ReadResults(ReadStrategy):
         )  # type: Dict[str, pd.DataFrame]
 
         default_values = self._read_default_values(self.results_config)  # type: Dict
+        for param in ["DiscountRate"]:
+            try:
+                input_data[param] = self.expand_defaults(
+                    param, input_data, default_values
+                )
+            except KeyError:
+                LOGGER.debug(f"Skipping expanding {param} for results calculation")
 
         results = self.calculate_results(
             available_results, input_data
@@ -72,6 +79,49 @@ class ReadResults(ReadStrategy):
                 LOGGER.debug("Error calculating %s: %s", name, str(ex))
 
         return results
+
+    def expand_defaults(
+        self, param: str, input_data: Dict[str, pd.DataFrame], defaults: Dict[str, Any]
+    ) -> pd.DataFrame:
+        """Adds default values to a dataframe
+
+        Parameters
+        ----------
+        param: str
+            The parameter to expand
+        input_data: Dict[str, pd.DataFrame]
+        defaults: Dict[str, Any]
+
+        Returns
+        -------
+        pd.DataFrame
+            Data with expanded default value
+        """
+
+        try:
+            data = input_data[param]
+        except KeyError:
+            LOGGER.debug(f"Can not create default value df for {param}")
+
+        index_data = {}
+        for index in data.index.names:
+            index_data[index] = input_data[index]["VALUE"].to_list()
+
+        if len(index_data) > 1:
+            new_index = pd.MultiIndex.from_product(
+                list(index_data.values()), names=list(index_data.keys())
+            )
+        else:
+            new_index = pd.Index(
+                list(index_data.values())[0], name=list(index_data.keys())[0]
+            )
+        df_default = pd.DataFrame(index=new_index)
+
+        df_default["VALUE"] = defaults[param]
+
+        df = pd.concat([data, df_default])
+        df = df[~df.index.duplicated(keep="first")]
+        return df.sort_index()
 
 
 class ReadWideResults(ReadResults):
